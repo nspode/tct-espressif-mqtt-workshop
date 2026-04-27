@@ -24,11 +24,14 @@
 
 ## Sobre este workshop
 
-Hands-on técnico apresentado no evento **TCT Brasil**, com foco em conectividade MQTT utilizando o **ESP32-C6** como kit de desenvolvimento. A sessão percorre três etapas progressivas: conexão sem segurança, conexão com TLS usando certificado autoassinado, e integração com o **AWS IoT Core**.
+Hands-on técnico apresentado no evento **Tech Day Road Show 2026, TCT Brasil**, com foco em conectividade MQTT utilizando o **ESP32-C6** como kit de desenvolvimento. A sessão percorre três etapas progressivas: conexão sem segurança, conexão com TLS usando certificado autoassinado, e integração com o **AWS IoT Core**.
 
 **Duração:** 70 minutos  
 **Nível:** Intermediário  
+**Linguagem:** C++  
 **Ferramentas:** ESP32-C6 + ESP-IDF + VSCode
+
+> **Referência:** Para mais informações sobre como utilizar C++ em projetos com o ESP-IDF, consulte o documento [Referência sobre C++ com ESP32-C6](docs/cpp-components.md) na pasta `docs/`.
 
 ---
 
