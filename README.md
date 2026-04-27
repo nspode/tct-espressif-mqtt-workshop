@@ -108,6 +108,18 @@ Cada etapa está em um branch dedicado. Acompanhe o diff entre branches para ent
 
 > **Dica:** use `git diff step/01-mqtt-plain step/02-mqtt-tls` para visualizar exatamente o que TLS exige a mais no cliente.
 
+### Ferramentas recomendadas
+
+Para facilitar a navegação entre os branches, recomendamos instalar a extensão **Git Graph** no VSCode. Com ela, é possível visualizar o histórico de commits e trocar de branches de forma gráfica e intuitiva.
+
+<div align="center">
+
+![Git Graph Extension](images/git-graph.png)
+
+</div>
+
+**Instalação:** Busque por "Git Graph" no Marketplace do VSCode ou clique [aqui](https://marketplace.visualstudio.com/items?itemName=mhutchie.git-graph).
+
 ---
 
 ## Infraestrutura do lab
