@@ -1,5 +1,7 @@
 # Referência sobre utilização de C++ com ESP32-C6
 
+**Autor: Nelson Spode**
+
 Este texto é uma referência para a criação de projetos utilizando C++ com o ESP-IDF. Ele pode ser usado como base para a criação de projetos mais complexos.
 
 # Preparando o Ambiente

@@ -78,7 +78,7 @@ namespace MYMQTT
         }
     }
 
-    esp_err_t init_mqtt_with_no_cert(const char *broker_uri, const char *device_id)
+    esp_err_t init_mqtt_with_selfsigned_cert(const char *broker_uri, const uint8_t *certificate, const char *device_id)
     {
         ESP_LOGI(TAG, "Inicializando MQTT...%s", broker_uri);
 
@@ -91,11 +91,10 @@ namespace MYMQTT
         mqtt5_cfg.network.disable_auto_reconnect = false;
         mqtt5_cfg.credentials.client_id = device_id;
         mqtt5_cfg.session.disable_clean_session = 0;
-        mqtt5_cfg.network.timeout_ms = MQTT_TIMEOUT_MS; // Timeout from cowAutomation_settings.h
-        mqtt5_cfg.session.keepalive = MQTT_KEEPALIVE_S; // keepalive from cowAutomation_settings.h
+        mqtt5_cfg.network.timeout_ms = MQTT_TIMEOUT_MS; // Timeout configurável
+        mqtt5_cfg.session.keepalive = MQTT_KEEPALIVE_S; // Keep-alive configurável
 
-        // attach the ESP-IDF default bunch of certificates
-        mqtt5_cfg.broker.verification.crt_bundle_attach = esp_crt_bundle_attach; // Use the default CA store provided by the ESP-IDF to verify the server's certificate like Let's Encrypt.
+        mqtt5_cfg.broker.verification.certificate = (const char *)certificate; // Use a self-signed certificate loaded in main.cpp
 
         // Configure Last Will and Testament (LWT)
         if (device_id && strlen(device_id) > 0) {
@@ -123,7 +122,7 @@ namespace MYMQTT
 
         esp_mqtt_client_register_event(client, static_cast<esp_mqtt_event_id_t>(ESP_EVENT_ANY_ID), mqtt_event_handler, NULL);
         return esp_mqtt_client_start(client);
-    }   
+    }  
 
     void publish_message(const char *topic, const char *message)
     {

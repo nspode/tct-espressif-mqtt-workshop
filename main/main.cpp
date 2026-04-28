@@ -27,6 +27,9 @@ static bool g_mqtt_is_initialized = false; // Flag para indicar se MQTT foi inic
 uint8_t ledStatus = 0; // Variável para armazenar o status atual do LED (0, 1, 2, 3)
 static led_strip_handle_t led_strip = nullptr; // Handle do LED — variável global
 
+extern const uint8_t selfsigned_techday_rootCA_pem_start[] asm("_binary_selfsigned_techday_rootCA_pem_start");
+extern const uint8_t selfsigned_techday_rootCA_pem_end[] asm("_binary_selfsigned_techday_rootCA_pem_end");
+
 // Event group para gerenciar o estado da conexão Wi-Fi
 static EventGroupHandle_t s_wifi_event_group;
 #define WIFI_CONNECTED_BIT BIT0 // Bit para indicar conexão bem-sucedida
@@ -209,7 +212,7 @@ void on_wifi_connected()
         }
 
         // Uma vez conectado ao Wi-Fi, inicializamos o MQTT usando a URI do broker e o device ID para autenticação.
-        MYMQTT::init_mqtt_with_no_cert(MQTT_BROKER_URI, device_id.c_str());
+        MYMQTT::init_mqtt_with_selfsigned_cert(MQTT_BROKER_URI, selfsigned_techday_rootCA_pem_start, device_id.c_str());
 
         // Registramos o callback para lidar com eventos de conexão MQTT (ex: quando a conexão é estabelecida com sucesso)
         MYMQTT::register_mqtt_connected_callback(mqtt_connected_handler);
