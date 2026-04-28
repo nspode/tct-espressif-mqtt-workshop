@@ -4,213 +4,191 @@
   </div>
 </div>
 
-<div align="center">
-
-### From plain MQTT to TLS and AWS IoT Core
+<div align="left">
 
 **TCT Brasil 2026 — Espressif Systems**
 
-</div>
+### Step 01 — MQTT sem TLS (porta 1883)
 
----
+## O que você vai fazer nesta etapa
 
-<div align="center">
+Nesta primeira etapa do workshop, vamos estabelecer uma conexão MQTT básica entre a ESP32-C6 e um broker EMQX rodando em uma instância AWS EC2. A comunicação será feita sem criptografia (porta 1883) para demonstrar o funcionamento fundamental do MQTT antes de adicionarmos segurança nas próximas etapas.
 
-<img src="images/logo-black.svg" alt="Espressif Systems" style="max-height: 80px; max-width: 600px;"/>
+## Para completar esta etapa, siga os passos abaixo:
 
-</div>
-
----
-
-## Sobre este workshop
-
-Hands-on técnico apresentado no evento **Tech Day Road Show 2026, TCT Brasil**, com foco em conectividade MQTT utilizando o **ESP32-C6** como kit de desenvolvimento. A sessão percorre três etapas progressivas: conexão sem segurança, conexão com TLS usando certificado autoassinado, e integração com o **AWS IoT Core**.
-
-**Duração:** 70 minutos  
-**Nível:** Intermediário  
-**Linguagem:** C++  
-**Ferramentas:** ESP32-C6 + ESP-IDF + VSCode
-
-> **Referência:** Para mais informações sobre como utilizar C++ em projetos com o ESP-IDF, consulte o documento [Referência sobre C++ com ESP32-C6](docs/cpp-components.md) na pasta `docs/`.
-
----
-
-## Apresentador
-
-**Eng. Nelson Spode**  
-_Engenheiro Eletricista, Mestre e Doutor pela UFSM — Universidade Federal de Santa Maria_  
-Sócio-gestor — [Mezzomo e Spode](https://www.linkedin.com/in/nelsonspode/) | Design House em Hardware e Software com foco em eletrônica Industrial, IoT e Eletrônica de Potência.
-
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-nelsonspode-0077B5?style=flat&logo=linkedin)](https://www.linkedin.com/in/nelsonspode/)
-
----
-
-## Pré-requisitos
-
-Antes do evento, instale e configure os itens abaixo. **A configuração do ambiente não será realizada durante o hands-on.**
-
-### Hardware
-- Development board **ESP32-C6** (fornecida no evento)
-- Cabo USB-C
-
-### Software
-
-| Item | Versão recomendada | Link |
-|---|---|---|
-| VSCode | ≥ 1.89 | [code.visualstudio.com](https://code.visualstudio.com/) |
-| Extensão ESP-IDF (VSCode) | ≥ 1.9 | Marketplace VSCode |
-| ESP-IDF | v5.3.1 | Instalado via extensão |
-| MQTTX Desktop | Latest | [mqttx.app](https://mqttx.app/) |
-| Driver USB | — | CP210x ou CH343 (veja abaixo) |
-
-### Driver USB
-- **Windows/Mac:** instale o driver [CP210x](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers) ou [CH343](https://github.com/WCHSoftGroup/ch343ser_linux) conforme o chip da sua board
-- **Linux:** geralmente já incluído no kernel
-
-### OpenSSL
-Necessário para geração do certificado autoassinado na etapa 2.
-- **Linux/Mac:** já disponível no terminal
-- **Windows:** instale o [Git for Windows](https://gitforwindows.org/) — o Git Bash inclui o `openssl`
-
----
-
-## Estrutura do repositório
-
-```
-tct-espressif-mqtt-workshop/
-├── images/
-│   ├── logo-tct.png
-│   └── logo-espressif.png
-├── main/
-│   ├── main.c
-│   ├── mqtt_handler.c
-│   ├── mqtt_handler.h
-│   └── CMakeLists.txt
-├── certs/                  # Certificados gerados na etapa 2
-│   └── .gitkeep
-├── CMakeLists.txt
-├── sdkconfig.defaults
-└── README.md
-```
-
----
-
-## Branches — etapas do hands-on
-
-Cada etapa está em um branch dedicado. Acompanhe o diff entre branches para entender exatamente o que muda a cada evolução.
-
-| Branch | Etapa | Descrição |
-|---|---|---|
-| `main` | — | Este README e estrutura base do projeto |
-| `step/01-mqtt-plain` | Etapa 1 | Conexão MQTT sem TLS — porta 1883 |
-| `step/02-mqtt-tls` | Etapa 2 | Conexão MQTT com TLS — porta 8883, certificado autoassinado |
-| `step/03-aws-iot` | Etapa 3 (bônus) | Integração com AWS IoT Core — mTLS |
-
-> **Dica:** use `git diff step/01-mqtt-plain step/02-mqtt-tls` para visualizar exatamente o que TLS exige a mais no cliente.
-
-### Ferramentas recomendadas
-
-Para facilitar a navegação entre os branches, recomendamos instalar a extensão **Git Graph** no VSCode. Com ela, é possível visualizar o histórico de commits e trocar de branches de forma gráfica e intuitiva.
-
-<div align="center">
-
-![Git Graph Extension](images/git-graph.png)
-
-</div>
-
-**Instalação:** Busque por "Git Graph" no Marketplace do VSCode ou clique [aqui](https://marketplace.visualstudio.com/items?itemName=mhutchie.git-graph).
+- Configurar a URI do broker e as credenciais Wi-Fi no `settings.h`
+- Compilar o firmware e gravar na ESP32-C6
+- Monitorar a saída serial e verificar a conexão
+- Observar os reports chegando no MQTTX
+- Enviar comandos pelo MQTTX para controlar o LED RGB da board
 
 ---
 
 ## Infraestrutura do lab
 
 ```
-┌─────────────────┐        MQTT         ┌──────────────────┐
-│   ESP32-C6      │ ──────────────────► │   Broker EMQX    │
-│  (seu device)   │   porta 1883/8883   │  (VM local / VPS)│
-└─────────────────┘                     └────────┬─────────┘
-                                                  │
-                                                  ▼
-                                        ┌──────────────────┐
-                                        │      MQTTX       │
-                                        │  (monitoramento) │
-                                        └──────────────────┘
+┌─────────────────┐        MQTT (1883)        ┌──────────────────────┐
+│   ESP32-C6      │ ────────────────────────► │   Broker EMQX        │
+│  (seu device)   │     sem criptografia      │  AWS EC2             │
+└─────────────────┘                           └──────────┬───────────┘
+                                                         │
+                                                         ▼
+                                              ┌──────────────────────┐
+                                              │        MQTTX         │
+                                              │   (monitoramento)    │
+                                              └──────────────────────┘
 ```
 
-**Broker principal:** EMQX rodando em VM local (apresentador)  
-**Broker backup:** instância em VPS (disponibilizado durante o evento)  
+**Broker:** EMQX rodando em instância AWS EC2  
+**Endereço:** `ec2-3-80-250-87.compute-1.amazonaws.com`  
+**Porta:** `1883` (sem TLS)  
 **Cliente de monitoramento:** MQTTX Desktop
 
----
+### Dashboard EMQX
 
-## Etapa 1 — MQTT sem TLS (porta 1883)
+Acesse o dashboard do broker para monitorar conexões e mensagens em tempo real:
 
-> Branch: `step/01-mqtt-plain`
+**URL:** [https://ec2-3-80-250-87.compute-1.amazonaws.com:18083/](https://ec2-3-80-250-87.compute-1.amazonaws.com:18083/)
 
-### O que você vai fazer
-- Clonar o branch e abrir no VSCode
-- Configurar SSID/senha Wi-Fi e URI do broker via `menuconfig`
-- Compilar, fazer flash e monitorar via `idf.py flash monitor`
-- Verificar a conexão e as mensagens no MQTTX
-
-### Configuração (`idf.py menuconfig`)
-```
-Example Configuration
-  ├── WiFi SSID
-  ├── WiFi Password
-  └── MQTT Broker URI    →  mqtt://<IP_DO_BROKER>:1883
-```
+| Campo | Valor |
+|---|---|
+| Usuário | `admin` |
+| Senha | `Techday_2026` |
 
 ---
 
-## Etapa 2 — MQTT com TLS (porta 8883)
+## Passo 1 — Clonar o branch
 
-> Branch: `step/02-mqtt-tls`
-
-### O que você vai fazer
-- Gerar um certificado autoassinado com `openssl`
-- Embedar o certificado CA no firmware via `CMakeLists.txt`
-- Configurar o cliente MQTT para usar TLS
-- Verificar a conexão segura no MQTTX
-
-### Geração do certificado
 ```bash
-# Gerar chave privada e certificado CA autoassinado
-openssl req -new -x509 -days 365 -extensions v3_ca \
-  -keyout certs/ca.key -out certs/ca.crt
+git clone --branch step/01-mqtt-plain https://github.com/nelsonspode/tct-espressif-mqtt-workshop.git
+cd tct-espressif-mqtt-workshop
 ```
 
-### O que muda no código em relação à etapa 1
-- URI: `mqtt://` → `mqtts://`
-- Porta: `1883` → `8883`
-- Campo adicionado em `esp_mqtt_client_config_t`:
-```c
-.broker.verification.certificate = (const char *)ca_crt_start,
+Ou, se já tiver o repositório clonado, faça o checkout para o branch da etapa 1:
+
+```bash
+git checkout step/01-mqtt-plain
+```
+
+Ou faça o checkout diretamente pelo VSCode usando a extensão Git.
+
+Para abrir o projeto no VSCode, use:
+```bash
+code .
 ```
 
 ---
 
-## Etapa 3 — AWS IoT Core (bônus)
+## Passo 2 — Configurar o projeto
 
-> Branch: `step/03-aws-iot`
+Abra o arquivo `main/settings.h` e preencha as definições abaixo:
 
-### O que você vai fazer
-- Criar um *thing* no AWS IoT Core
-- Baixar os certificados gerados pela AWS (CA, client cert, client key)
-- Configurar o endpoint e os três certificados no firmware
-- Verificar a conexão no MQTTX e no console da AWS
+```cpp
+// URI do broker MQTT
+#define MQTT_BROKER_URI         "mqtt://ec2-3-80-250-87.compute-1.amazonaws.com:1883"
 
-### O que muda em relação à etapa 2
-- Broker: EMQX → endpoint AWS (`xxxxxxxx.iot.<region>.amazonaws.com`)
-- Autenticação: TLS unilateral → **mTLS** (o broker também valida o cliente)
-- Campos adicionados:
-```c
-.client_cert_pem = (const char *)client_crt_start,
-.client_key_pem  = (const char *)client_key_start,
+// Credenciais Wi-Fi
+#define PRE_CONFIGURED_WIFI_SSID        "nome-da-rede"
+#define PRE_CONFIGURED_WIFI_PASSWORD    "senha-da-rede"
 ```
 
-> **Nota:** TLS unilateral (etapa 2) = só o cliente valida o broker.  
-> mTLS (etapa 3) = validação mútua — broker e cliente se autenticam.
+> O dispositivo usa o **MAC address** da placa como identificador único — nenhuma outra configuração é necessária para garantir unicidade entre os participantes.
+
+Os tópicos MQTT do seu dispositivo são construídos automaticamente:
+
+```
+/techday/<MAC>/reports/   ← reports publicados pelo dispositivo a cada 5s
+/techday/<MAC>/commands/  ← comandos que o dispositivo escuta
+<MAC>/status/             ← status online/offline automático (LWT)
+```
+
+---
+
+## Passo 3 — Compilar e gravar
+
+Selecione a porta serial correta na barra inferior do VSCode (ícone de tomada), depois clique no icone em forma de "fogo". Ao clicar neste ícone, o VSCode irá compilar o projeto, gravar no dispositivo e abrir o monitor serial automaticamente. 
+
+<img src="images/esp-idf-footer.png" alt="VSCode Flash" style="width: 100%; display: block; margin: 20px auto; border-radius: 8px;"/>
+
+Você deve ver no terminal uma sequência semelhante a:
+
+```
+I (xxxx) app: Estação Wi-Fi iniciada
+I (xxxx) app: IP obtido: 192.168.x.x
+W (xxxx) app: Wi-Fi conectado! Iniciando MQTT...
+I (xxxx) app: Device ID (MAC): A1B2C3D4E5F6
+I (xxxx) MY_MQTT: Inicializando MQTT...mqtt://ec2-3-80-250-87.compute-1.amazonaws.com:1883
+I (xxxx) MY_MQTT: Conectado ao broker MQTT.
+I (xxxx) MAIN: Inscrito no tópico: /techday/A1B2C3D4E5F6/commands/
+```
+
+> O LED da board ficará **laranja** durante a inicialização.
+
+---
+
+## Passo 4 — Monitorar no MQTTX
+
+Abra o MQTTX Desktop e crie uma nova conexão:
+
+| Campo | Valor |
+|---|---|
+| Host | `mqtt://ec2-3-80-250-87.compute-1.amazonaws.com` |
+| Porta | `1883` |
+| Client ID | qualquer nome (ex: `mqttx-monitor`) |
+
+<img src="images/mqttx_setup.png" alt="MQTX Connection" style="width: 100%; display: block; margin: 20px auto; border-radius: 8px;"/>
+
+### Assinar os tópicos do seu dispositivo
+
+**Após conectar**, Clique no botão ** + Subscription** e assine os tópicos do seu dispositivo substituindo `<MAC>` pelo endereço exibido no monitor serial:
+
+| Tópico | O que você vai ver |
+|---|---|
+| `/techday/<MAC>/reports/` | Reports publicados automaticamente a cada 5 segundos |
+| `<MAC>/status/` | Status `online` ao conectar, `offline` ao desconectar |
+| `#` | Todos os tópicos de todos os dispositivos do lab |
+
+<img src="images/mqttx_newSubsc.png" alt="MQTX Subscriptions" style="width: 100%; max-width: 400px; display: block; margin: 20px auto; border-radius: 8px;"/>
+
+---
+
+## Passo 5 — Enviar comandos para o LED
+
+O dispositivo escuta comandos no tópico `/techday/<MAC>/commands/`. No MQTTX, publique neste tópico com o seguinte payload JSON:
+
+```json
+{"command": "set_led", "value": 0}
+```
+
+| `value` | Cor do LED |
+|---|---|
+| `0` |  Laranja |
+| `1` |  Vermelho |
+| `2` |  Verde |
+| `3` |  Azul |
+
+Após receber o comando, o dispositivo publica automaticamente o estado atualizado no tópico de reports.
+
+---
+
+## O que está acontecendo
+
+Nesta etapa a comunicação é **completamente aberta** — os dados trafegam sem nenhuma criptografia. Qualquer dispositivo na mesma rede consegue interceptar as mensagens.
+
+Isso é intencional: o objetivo é mostrar o funcionamento básico do MQTT antes de adicionar segurança nas próximas etapas.
+
+```
+ESP32-C6  ──── dados em texto puro ────►  Broker EMQX  ────►  MQTTX
+```
+
+### Experimente também
+
+Se terminar antes, explore:
+
+- **LWT na prática:** desconecte o cabo USB e observe o tópico `<MAC>/status/` receber `offline` automaticamente — esse é o Last Will and Testament do MQTT funcionando.
+- **Dashboard EMQX:** acesse o dashboard e veja seu dispositivo listado como cliente conectado, os tópicos ativos e o tráfego de mensagens em tempo real.
+- **Ajuste o intervalo:** altere o valor de `5000` no `vTaskDelay(pdMS_TO_TICKS(5000))` no `main.cpp` e observe a frequência de publicação mudar no MQTTX.
+- **Customize o payload:** modifique a função `publishCurrentState()` no `main.cpp` e adicione novos campos ao JSON publicado.
 
 ---
 
@@ -219,25 +197,24 @@ openssl req -new -x509 -days 365 -extensions v3_ca \
 | Problema | Possível causa | Solução |
 |---|---|---|
 | Porta COM não aparece | Driver USB não instalado | Instale CP210x ou CH343 |
-| `idf.py flash` falha | Porta ocupada ou permissão | Feche o monitor; no Linux: `sudo usermod -aG dialout $USER` |
-| Wi-Fi não conecta | SSID/senha errados | Revise via `menuconfig` |
-| `mbedtls` erro de certificado | Certificado expirado ou CN errado | Regere o certificado com o IP/hostname correto no CN |
-| MQTTX não recebe mensagens | Topic incorreto | Confirme o topic no código e no MQTTX (case-sensitive) |
+| `idf.py flash` falha | Porta ocupada | Feche o monitor serial antes de gravar |
+| Wi-Fi não conecta | SSID/senha incorretos | Revise o `settings.h` |
+| MQTT não conecta | URI incorreta ou sem internet | Confirme a URI no `settings.h` e a rede |
+| Nenhuma mensagem no MQTTX | Tópico incorreto | Confirme o MAC no monitor serial |
+| LED não muda | Comando JSON malformado | Verifique aspas e estrutura do JSON |
 
 ---
 
-## Referências
+## Próximo passo
 
-- [ESP-IDF Programming Guide](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c6/)
-- [ESP-IDF MQTT Client](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c6/api-reference/protocols/mqtt.html)
-- [EMQX Documentation](https://docs.emqx.com/)
-- [AWS IoT Core Developer Guide](https://docs.aws.amazon.com/iot/latest/developerguide/)
-- [MQTTX](https://mqttx.app/)
+Com a conexão básica funcionando, avance para a etapa 2 onde vamos gerar um certificado autoassinado e adicionar TLS:
+
+```bash
+git checkout step/02-mqtt-tls
+```
 
 ---
 
 <div align="center">
-
-Desenvolvido para o evento **TCT Brasil** em parceria com a **Espressif Systems**
-
+Desenvolvido para o evento <strong>TCT Brasil</strong> em parceria com a <strong>Espressif Systems</strong>
 </div>
