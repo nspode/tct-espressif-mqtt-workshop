@@ -68,30 +68,9 @@ Antes do evento, instale e configure os itens abaixo. **A configuração do ambi
 - **Linux:** geralmente já incluído no kernel
 
 ### OpenSSL
-Necessário para geração do certificado autoassinado na etapa 2.
+não é necessário, mas é usada em demonstrações para geração do certificado autoassinado na etapa 2.
 - **Linux/Mac:** já disponível no terminal
 - **Windows:** instale o [Git for Windows](https://gitforwindows.org/) — o Git Bash inclui o `openssl`
-
----
-
-## Estrutura do repositório
-
-```
-tct-espressif-mqtt-workshop/
-├── images/
-│   ├── logo-tct.png
-│   └── logo-espressif.png
-├── main/
-│   ├── main.c
-│   ├── mqtt_handler.c
-│   ├── mqtt_handler.h
-│   └── CMakeLists.txt
-├── certs/                  # Certificados gerados na etapa 2
-│   └── .gitkeep
-├── CMakeLists.txt
-├── sdkconfig.defaults
-└── README.md
-```
 
 ---
 
@@ -99,18 +78,18 @@ tct-espressif-mqtt-workshop/
 
 Cada etapa está em um branch dedicado. Acompanhe o diff entre branches para entender exatamente o que muda a cada evolução.
 
-| Branch | Etapa | Descrição |
-|---|---|---|
-| `main` | — | Este README e estrutura base do projeto |
-| `step/01-mqtt-plain` | Etapa 1 | Conexão MQTT sem TLS — porta 1883 |
-| `step/02-mqtt-tls` | Etapa 2 | Conexão MQTT com TLS — porta 8883, certificado autoassinado |
-| `step/03-aws-iot` | Etapa 3 (bônus) | Integração com AWS IoT Core — mTLS |
+| Branch | Etapa | Descrição | README |
+|---|---|---|---|
+| `main` | — | Este README e estrutura base do projeto | — |
+| `step/01-mqtt-plain` | Etapa 1 | Conexão MQTT sem TLS — porta 1883 | [README](../../tree/step/01-mqtt-plain#readme) |
+| `step/02-mqtt-tls` | Etapa 2 | Conexão MQTT com TLS — porta 8883, certificado autoassinado | [README](../../tree/step/02-mqtt-tls#readme) |
+| `step/03-aws-iot` | Etapa 3 (bônus) | Integração com AWS IoT Core — mTLS | [README](../../tree/step/03-aws-iot#readme) |
 
 > **Dica:** use `git diff step/01-mqtt-plain step/02-mqtt-tls` para visualizar exatamente o que TLS exige a mais no cliente.
 
 ### Ferramentas recomendadas
 
-Para facilitar a navegação entre os branches, recomendamos instalar a extensão **Git Graph** no VSCode. Com ela, é possível visualizar o histórico de commits e trocar de branches de forma gráfica e intuitiva.
+Para facilitar a navegação entre os branches, recomendamos instalar a extensão **Git Graph** ou **GitLens** no VSCode. Com ela, é possível visualizar o histórico de commits e trocar de branches de forma gráfica e intuitiva.
 
 <div align="center">
 
@@ -118,7 +97,10 @@ Para facilitar a navegação entre os branches, recomendamos instalar a extensã
 
 </div>
 
-**Instalação:** Busque por "Git Graph" no Marketplace do VSCode ou clique [aqui](https://marketplace.visualstudio.com/items?itemName=mhutchie.git-graph).
+**Instalação:** Busque por "Git Graph" no Marketplace do VSCode ou clique [aqui](https://marketplace.visualstudio.com/items?itemName=mhutchie.git-graph). 
+
+Caso prefira, a extensão **GitLens** também oferece funcionalidades avançadas de visualização de branches e diffs. Procure por "GitLens" no Marketplace ou acesse [aqui](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens).
+
 
 ---
 
@@ -127,7 +109,7 @@ Para facilitar a navegação entre os branches, recomendamos instalar a extensã
 ```
 ┌─────────────────┐        MQTT         ┌──────────────────┐
 │   ESP32-C6      │ ──────────────────► │   Broker EMQX    │
-│  (seu device)   │   porta 1883/8883   │  (VM local / VPS)│
+│  (seu device)   │   porta 1883/8883   │   AWS EC2        │
 └─────────────────┘                     └────────┬─────────┘
                                                   │
                                                   ▼
@@ -137,81 +119,55 @@ Para facilitar a navegação entre os branches, recomendamos instalar a extensã
                                         └──────────────────┘
 ```
 
-**Broker principal:** EMQX rodando em VM local (apresentador)  
-**Broker backup:** instância em VPS (disponibilizado durante o evento)  
+**Broker:** EMQX rodando em instância AWS EC2  
+**Broker backup:** VM local (apresentador)  
 **Cliente de monitoramento:** MQTTX Desktop
 
+### Dashboard EMQX
+
+**URL:** [http://ec2-3-80-250-87.compute-1.amazonaws.com:18083/](http://ec2-3-80-250-87.compute-1.amazonaws.com:18083/)
+
+| Campo | Valor |
+|---|---|
+| Usuário | `admin` |
+| Senha | `Techday_2026` |
+
 ---
 
-## Etapa 1 — MQTT sem TLS (porta 1883)
+## Resumo das etapas
 
+### Etapa 1 — MQTT sem TLS (porta 1883)
 > Branch: `step/01-mqtt-plain`
 
-### O que você vai fazer
-- Clonar o branch e abrir no VSCode
-- Configurar SSID/senha Wi-Fi e URI do broker via `menuconfig`
-- Compilar, fazer flash e monitorar via `idf.py flash monitor`
-- Verificar a conexão e as mensagens no MQTTX
+Conexão básica ao broker EMQX sem criptografia. O participante configura Wi-Fi e URI do broker no `settings.h`, grava o firmware e monitora a comunicação no MQTTX. Inclui controle do LED RGB via comandos JSON.
 
-### Configuração (`idf.py menuconfig`)
-```
-Example Configuration
-  ├── WiFi SSID
-  ├── WiFi Password
-  └── MQTT Broker URI    →  mqtt://<IP_DO_BROKER>:1883
-```
-
----
-
-## Etapa 2 — MQTT com TLS (porta 8883)
-
+### Etapa 2 — MQTT com TLS (porta 8883)
 > Branch: `step/02-mqtt-tls`
 
-### O que você vai fazer
-- Gerar um certificado autoassinado com `openssl`
-- Embedar o certificado CA no firmware via `CMakeLists.txt`
-- Configurar o cliente MQTT para usar TLS
-- Verificar a conexão segura no MQTTX
+Adiciona TLS à conexão usando um certificado CA autoassinado embedado no firmware. O diff em relação à etapa 1 mostra exatamente o que TLS exige a mais no cliente MQTT. O certificado é gerado ao vivo com `openssl` como demonstração.
 
-### Geração do certificado
-```bash
-# Gerar chave privada e certificado CA autoassinado
-openssl req -new -x509 -days 365 -extensions v3_ca \
-  -keyout certs/ca.key -out certs/ca.crt
-```
-
-### O que muda no código em relação à etapa 1
-- URI: `mqtt://` → `mqtts://`
-- Porta: `1883` → `8883`
-- Campo adicionado em `esp_mqtt_client_config_t`:
-```c
-.broker.verification.certificate = (const char *)ca_crt_start,
-```
-
----
-
-## Etapa 3 — AWS IoT Core (bônus)
-
+### Etapa 3 — AWS IoT Core (bônus)
 > Branch: `step/03-aws-iot`
 
-### O que você vai fazer
-- Criar um *thing* no AWS IoT Core
-- Baixar os certificados gerados pela AWS (CA, client cert, client key)
-- Configurar o endpoint e os três certificados no firmware
-- Verificar a conexão no MQTTX e no console da AWS
+Conecta ao AWS IoT Core usando **mTLS** — autenticação mútua com três certificados embedados no firmware. O diff em relação à etapa 2 mostra a diferença entre TLS unilateral e mTLS.
 
-### O que muda em relação à etapa 2
-- Broker: EMQX → endpoint AWS (`xxxxxxxx.iot.<region>.amazonaws.com`)
-- Autenticação: TLS unilateral → **mTLS** (o broker também valida o cliente)
-- Campos adicionados:
-```c
-.client_cert_pem = (const char *)client_crt_start,
-.client_key_pem  = (const char *)client_key_start,
+## Vamos começar!
+
+Clone o repositório e faça o checkout para a primeira etapa:
+
+```bash
+git clone https://github.com/nelsonspode/tct-espressif-mqtt-workshop.git
+cd tct-espressif-mqtt-workshop
+git checkout step/01-mqtt-plain
 ```
 
-> **Nota:** TLS unilateral (etapa 2) = só o cliente valida o broker.  
-> mTLS (etapa 3) = validação mútua — broker e cliente se autenticam.
+Em seguida, abra a pasta no VSCode:
 
+```bash
+code .
+```
+
+Siga as instruções no README deste branch para configurar e gravar o firmware. Bom workshop! 🚀
 ---
 
 ## Troubleshooting
@@ -219,16 +175,16 @@ openssl req -new -x509 -days 365 -extensions v3_ca \
 | Problema | Possível causa | Solução |
 |---|---|---|
 | Porta COM não aparece | Driver USB não instalado | Instale CP210x ou CH343 |
-| `idf.py flash` falha | Porta ocupada ou permissão | Feche o monitor; no Linux: `sudo usermod -aG dialout $USER` |
-| Wi-Fi não conecta | SSID/senha errados | Revise via `menuconfig` |
-| `mbedtls` erro de certificado | Certificado expirado ou CN errado | Regere o certificado com o IP/hostname correto no CN |
-| MQTTX não recebe mensagens | Topic incorreto | Confirme o topic no código e no MQTTX (case-sensitive) |
+| `idf.py flash` falha | Porta ocupada | Feche o monitor serial antes de gravar |
+| Wi-Fi não conecta | SSID/senha incorretos | Revise o `settings.h` |
+| `mbedtls` erro de certificado | Certificado expirado ou CN errado | Consulte o README do branch correspondente |
+| MQTTX não recebe mensagens | Tópico incorreto | Confirme o MAC no monitor serial |
 
 ---
 
 ## Referências
 
-- [ESP-IDF Programming Guide](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c6/)
+- [ESP-IDF Programming Guide — ESP32-C6](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c6/)
 - [ESP-IDF MQTT Client](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c6/api-reference/protocols/mqtt.html)
 - [EMQX Documentation](https://docs.emqx.com/)
 - [AWS IoT Core Developer Guide](https://docs.aws.amazon.com/iot/latest/developerguide/)
@@ -238,6 +194,6 @@ openssl req -new -x509 -days 365 -extensions v3_ca \
 
 <div align="center">
 
-Desenvolvido para o evento **TCT Brasil** em parceria com a **Espressif Systems**
+Desenvolvido para o evento <strong>TCT Brasil</strong> pela <strong>Mezzomo e Spode Design House</strong>
 
 </div>
