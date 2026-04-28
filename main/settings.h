@@ -4,7 +4,7 @@
 #define PRE_CONFIGURED_WIFI_SSID                ""
 #define PRE_CONFIGURED_WIFI_PASSWORD            ""
 
-#define MQTT_BROKER_URI                         "" //
+#define MQTT_BROKER_URI                         "" 
 #define DUMMY_DEVICE_ID                         "DEV_123"
 
 #define MQTT_TIMEOUT_MS 10000                   // Timeout da conexão MQTT em milissegundos

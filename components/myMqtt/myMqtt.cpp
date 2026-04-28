@@ -78,25 +78,48 @@ namespace MYMQTT
         }
     }
 
-    esp_err_t init_mqtt_with_selfsigned_cert(const char *broker_uri, const uint8_t *certificate, const char *device_id)
+    esp_err_t init_mqtt_with_aws_iot_certs(const char *broker_uri, const char *device_id, const uint8_t *CA_certificate, const size_t CA_certificate_len, const uint8_t *device_cert, const size_t device_cert_len, const uint8_t *device_private_key, const size_t device_private_key_len)
     {
-        ESP_LOGI(TAG, "Inicializando MQTT...%s", broker_uri);
+        ESP_LOGI(TAG, "Inicializando MQTT para AWS IoT Core...%s", broker_uri);
 
         // Gera um client_id baseado no MAC do dispositivo
         // generate_mac_client_id();
 
+        ESP_ERROR_CHECK(esp_tls_init_global_ca_store());
+        ESP_ERROR_CHECK(esp_tls_set_global_ca_store((const unsigned char *)CA_certificate,
+        CA_certificate_len));
+        
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
+
         esp_mqtt_client_config_t mqtt5_cfg = {};
-        mqtt5_cfg.broker.address.uri = broker_uri;
+
+        // Configure broker connection
+        mqtt5_cfg.broker.address.hostname = broker_uri;
+        mqtt5_cfg.broker.address.port = 8883;
+        mqtt5_cfg.broker.address.transport = MQTT_TRANSPORT_OVER_SSL;
+        mqtt5_cfg.broker.verification.use_global_ca_store = true;
+        // mqtt5_cfg.credentials.client_id = mqtt_client_id;
+        mqtt5_cfg.credentials.client_id = device_id;
+
+        mqtt5_cfg.credentials.authentication.certificate = (const char *)device_cert;
+        mqtt5_cfg.credentials.authentication.certificate_len = device_cert_len;
+        mqtt5_cfg.credentials.authentication.key = (const char *)device_private_key;  
+        mqtt5_cfg.credentials.authentication.key_len = device_private_key_len;
+        mqtt5_cfg.task.priority = 5;
+        mqtt5_cfg.task.stack_size = 1024 * 8;
+
         mqtt5_cfg.session.protocol_ver = MQTT_PROTOCOL_V_5;
         mqtt5_cfg.network.disable_auto_reconnect = false;
-        mqtt5_cfg.credentials.client_id = device_id;
-        mqtt5_cfg.session.disable_clean_session = 0;
-        mqtt5_cfg.network.timeout_ms = MQTT_TIMEOUT_MS; // Timeout configurável
-        mqtt5_cfg.session.keepalive = MQTT_KEEPALIVE_S; // Keep-alive configurável
-
-        mqtt5_cfg.broker.verification.certificate = (const char *)certificate; // Use a self-signed certificate loaded in main.cpp
+        mqtt5_cfg.session.disable_clean_session = 1;
+        mqtt5_cfg.network.timeout_ms = MQTT_TIMEOUT_MS;
+        mqtt5_cfg.session.keepalive = MQTT_KEEPALIVE_S;
 
         // Configure Last Will and Testament (LWT)
+        // The Last Will message will be published automatically by the broker when the device
+        // disconnects unexpectedly (e.g., power loss, network failure, crash).
+        // Estimated trigger time: ~90-120 seconds after unexpected disconnection.
+        // This is based on the keepalive period (MQTT_KEEPALIVE_S = 60s) multiplied by 1.5x,
+        // which is the typical broker timeout before considering a client disconnected.
         if (device_id && strlen(device_id) > 0) {
             static char lwt_topic[128];
             snprintf(lwt_topic, sizeof(lwt_topic), "/techday/%s/reports/", device_id);
@@ -104,25 +127,20 @@ namespace MYMQTT
             mqtt5_cfg.session.last_will.msg = "offline";
             mqtt5_cfg.session.last_will.msg_len = 7;
             mqtt5_cfg.session.last_will.qos = 1;
-            mqtt5_cfg.session.last_will.retain = true;
-            ESP_LOGI(TAG, "LWT configurado para tópico: %s", lwt_topic);
+            mqtt5_cfg.session.last_will.retain = true;            
         }
-
-        // Other options
-        // mqtt5_cfg.broker.verification.skip_cert_common_name_check = true;
-        // mqtt5_cfg.credentials.username = "123",
-        // mqtt5_cfg.credentials.authentication.password = "456",
-
+   
         client = esp_mqtt_client_init(&mqtt5_cfg);
         if (!client)
         {
-            ESP_LOGE(TAG, "Falha ao inicializar o cliente MQTT");
+            ESP_LOGE(TAG, "Falha ao inicializar o cliente MQTT AWS IoT");
             return ESP_FAIL;
         }
 
         esp_mqtt_client_register_event(client, static_cast<esp_mqtt_event_id_t>(ESP_EVENT_ANY_ID), mqtt_event_handler, NULL);
         return esp_mqtt_client_start(client);
-    }  
+    }
+
 
     void publish_message(const char *topic, const char *message)
     {

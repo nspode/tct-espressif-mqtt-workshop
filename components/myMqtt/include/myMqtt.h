@@ -6,7 +6,7 @@
 namespace MYMQTT
 {
     // Inicializa o cliente MQTT    
-    esp_err_t init_mqtt_with_selfsigned_cert(const char *broker_uri, const uint8_t *certificate, const char *device_id);
+    esp_err_t init_mqtt_with_aws_iot_certs(const char *broker_uri, const char *device_id, const uint8_t *CA_certificate, const size_t CA_certificate_len, const uint8_t *device_cert, const size_t device_cert_len, const uint8_t *device_private_key, const size_t device_private_key_len);
     
     // Publica mensagens no tópico MQTT
     void publish_message(const char *topic, const char *message);

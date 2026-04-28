@@ -27,8 +27,13 @@ static bool g_mqtt_is_initialized = false; // Flag para indicar se MQTT foi inic
 uint8_t ledStatus = 0; // Variável para armazenar o status atual do LED (0, 1, 2, 3)
 static led_strip_handle_t led_strip = nullptr; // Handle do LED — variável global
 
-extern const uint8_t selfsigned_techday_rootCA_pem_start[] asm("_binary_selfsigned_techday_rootCA_pem_start");
-extern const uint8_t selfsigned_techday_rootCA_pem_end[] asm("_binary_selfsigned_techday_rootCA_pem_end");
+// Certificados para autenticação MQTT com AWS IoT Core
+extern const uint8_t aws_iot_rootCA_pem_start[] asm("_binary_aws_iot_rootCA_pem_start");
+extern const uint8_t aws_iot_rootCA_pem_end[] asm("_binary_aws_iot_rootCA_pem_end");
+extern const uint8_t device_cert_pem_start[] asm("_binary_device_cert_pem_start");
+extern const uint8_t device_cert_pem_end[] asm("_binary_device_cert_pem_end");
+extern const uint8_t device_private_key_pem_start[] asm("_binary_device_private_key_pem_start");
+extern const uint8_t device_private_key_pem_end[] asm("_binary_device_private_key_pem_end");
 
 // Event group para gerenciar o estado da conexão Wi-Fi
 static EventGroupHandle_t s_wifi_event_group;
@@ -212,7 +217,7 @@ void on_wifi_connected()
         }
 
         // Uma vez conectado ao Wi-Fi, inicializamos o MQTT usando a URI do broker e o device ID para autenticação.
-        MYMQTT::init_mqtt_with_selfsigned_cert(MQTT_BROKER_URI, selfsigned_techday_rootCA_pem_start, device_id.c_str());
+        MYMQTT::init_mqtt_with_aws_iot_certs(MQTT_BROKER_URI, device_id.c_str(), aws_iot_rootCA_pem_start, aws_iot_rootCA_pem_end - aws_iot_rootCA_pem_start, device_cert_pem_start, device_cert_pem_end - device_cert_pem_start, device_private_key_pem_start, device_private_key_pem_end - device_private_key_pem_start);
 
         // Registramos o callback para lidar com eventos de conexão MQTT (ex: quando a conexão é estabelecida com sucesso)
         MYMQTT::register_mqtt_connected_callback(mqtt_connected_handler);
