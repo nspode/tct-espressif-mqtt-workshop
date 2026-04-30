@@ -86,7 +86,7 @@ mqtt5_cfg.broker.verification.certificate = (const char *)certificate;
 | Campo | Valor |
 |---|---|
 | Usuário | `TCT` |
-| Senha | `techday` |
+| Senha | `Techday_2026` |
 
 > Verifique as conexões ativas na aba `Listners` no Dashboard. Verá a conexão do tipo **SSL** na porta `8883`.
 ---
