@@ -55,6 +55,8 @@ Antes do evento, instale e configure os itens abaixo. **A configuração do ambi
 
 ### Software
 
+> Siga as instruções em `docs/instalação-esp-idf-vscode.md` para instalar o ambiente de desenvolvimento ESP-IDF via extensão do VSCode.
+> 
 | Item | Versão recomendada | Link |
 |---|---|---|
 | VSCode | ≥ 1.89 | [code.visualstudio.com](https://code.visualstudio.com/) |
