@@ -48,7 +48,7 @@ Nesta primeira etapa do workshop, vamos estabelecer uma conexão MQTT básica en
 
 Acesse o dashboard do broker para monitorar conexões e mensagens em tempo real:
 
-**URL:** [https://ec2-3-80-250-87.compute-1.amazonaws.com:18083/](https://ec2-3-80-250-87.compute-1.amazonaws.com:18083/)
+**URL:** [http://ec2-3-80-250-87.compute-1.amazonaws.com:18083/](http://ec2-3-80-250-87.compute-1.amazonaws.com:18083/)
 
 | Campo | Valor |
 |---|---|
@@ -216,5 +216,6 @@ git checkout step/02-mqtt-tls
 ---
 
 <div align="center">
-Desenvolvido para o evento <strong>TCT Brasil</strong> em parceria com a <strong>Espressif Systems</strong>
+Desenvolvido para o evento <strong>TCT Brasil</strong> pela <strong>Mezzomo e Spode Design House</strong>
 </div>
+
