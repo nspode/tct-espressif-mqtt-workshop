@@ -190,6 +190,27 @@ As credenciais Wi-Fi já estão preenchidas do step anterior — nenhuma outra a
 
 ## Passo 3 — Compilar e gravar
 
+> **Caso queira compilar com a versão 6.0.1**: No ESP-IDF 6.0.x, o ESP-MQTT foi retirado do repositório do IDF e passou a ser um componente gerido pelo **IDF Component Manager**, com o identificador espressif/mqtt.  
+>
+> Então, para usar a versão 6.0.1 do ESP-IDF (**somente**), é necessário adicionar a dependência do componente MQTT (e também do cjson) no arquivo `idf_component.yml`. o arquivo do projeto deverá ficar assim:
+>
+>```yaml
+>dependencies:
+>  espressif/led_strip: ">=2.5.0"
+>  espressif/mqtt: "^1.0.0"
+>  espressif/cjson: "^1.7.19"
+>  idf:
+>    version: ">=5.0"
+>```
+>
+> O arquivo CMakeLists.txt da pasta `main` também precisa ser atualizado para substituir o  componente json pelo cjson:
+>
+> ```cmake
+> idf_component_register(SRCS "main.cpp"
+>                       INCLUDE_DIRS "."
+>                       PRIV_REQUIRES  hello esp_wifi esp_driver_rmt esp_netif esp_event >myMqtt cjson led_strip )
+> ```
+
 Selecione a porta serial correta na barra inferior do VSCode (ícone de tomada), depois clique no icone em forma de "fogo". Ao clicar neste ícone, o VSCode irá compilar o projeto, gravar no dispositivo e abrir o monitor serial automaticamente. 
 
 <img src="images/esp-idf-footer.png" alt="VSCode Flash" style="width: 100%; display: block; margin: 20px auto; border-radius: 8px;"/>
@@ -270,5 +291,5 @@ git checkout step/03-aws-iot
 ---
 
 <div align="center">
-Desenvolvido para o evento <strong>TCT Brasil</strong> em parceria com a <strong>Espressif Systems</strong>
+Desenvolvido para o evento <strong>TCT Brasil</strong> pela <strong>Mezzomo e Spode Design House</strong>
 </div>
