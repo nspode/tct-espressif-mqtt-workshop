@@ -106,26 +106,18 @@ Os tópicos MQTT do seu dispositivo são construídos automaticamente:
 
 ## Passo 3 — Compilar e gravar
 
-> **Caso queira compilar com a versão 6.0.1**: No ESP-IDF 6.0.x, o ESP-MQTT foi retirado do repositório do IDF e passou a ser um componente gerido pelo **IDF Component Manager**, com o identificador espressif/mqtt.  
+> **Usando o ESP-IDF 6.x?** A partir da v6 o ESP-MQTT e o cJSON saíram do repositório do IDF e passaram a ser componentes do **IDF Component Manager** (`espressif/mqtt` e `espressif/cjson`). O projeto já está preparado para isso: os arquivos `idf_component.yml` e `CMakeLists.txt` escolhem as dependências automaticamente conforme a versão do IDF, então **não é preciso editar nada**.
 >
-> Então, para usar a versão 6.0.1 do ESP-IDF (**somente**), é necessário adicionar a dependência do componente MQTT (e também do cjson) no arquivo `idf_component.yml`. o arquivo do projeto deverá ficar assim:
+> O repositório traz `sdkconfig`, `dependencies.lock` e `managed_components/` gerados com a v5.3. Na primeira compilação com a v6 (ou sempre que trocar de versão do IDF), limpe o projeto antes (as opções essenciais, como tabela de partição e MQTT 5, são recriadas a partir do `sdkconfig.defaults`):
 >
->```yaml
->dependencies:
->  espressif/led_strip: ">=2.5.0"
->  espressif/mqtt: "^1.0.0"
->  espressif/cjson: "^1.7.19"
->  idf:
->    version: ">=5.0"
->```
->
-> O arquivo CMakeLists.txt da pasta `main` também precisa ser atualizado para substituir o  componente json pelo cjson:
->
-> ```cmake
-> idf_component_register(SRCS "main.cpp"
->                       INCLUDE_DIRS "."
->                       PRIV_REQUIRES  hello esp_wifi esp_driver_rmt esp_netif esp_event >myMqtt cjson led_strip )
+> ```bash
+> idf.py fullclean
+> rm -rf build managed_components dependencies.lock
+> idf.py set-target esp32c6
+> idf.py build
 > ```
+>
+> Se tiver mais de uma versão instalada, selecione a desejada no VSCode com o comando `ESP-IDF: Select Current ESP-IDF Version`.
  
 Selecione a porta serial correta na barra inferior do VSCode (ícone de tomada), depois clique no icone em forma de "fogo". Ao clicar neste ícone, o VSCode irá compilar o projeto, gravar no dispositivo e abrir o monitor serial automaticamente. 
 
